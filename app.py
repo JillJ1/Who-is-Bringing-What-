@@ -158,11 +158,11 @@ st.markdown(
 )
 
 # ------------------------------
-# Initialize session state
+# Initialize session state with a unique key
 # ------------------------------
-if "items" not in st.session_state:
+if "potluck_items" not in st.session_state:
     # Start with a few optional examples (can be removed)
-    st.session_state.items = [
+    st.session_state.potluck_items = [
         {"name": "Truffle Popcorn", "category": "Snacks", "claimed_by": None},
         {"name": "Mini Quiches", "category": "Snacks", "claimed_by": None},
         {"name": "Vegan Chili", "category": "Main Dishes", "claimed_by": None},
@@ -178,12 +178,12 @@ if "name" not in st.session_state:
 # Helper functions
 # ------------------------------
 def get_items_for_category(category):
-    return [item for item in st.session_state.items if item["category"] == category]
+    return [item for item in st.session_state.potluck_items if item["category"] == category]
 
 def is_duplicate(new_name, exclude_item=None):
     """Case‑insensitive duplicate check across all items."""
     new_lower = new_name.lower()
-    for item in st.session_state.items:
+    for item in st.session_state.potluck_items:
         if exclude_item and item == exclude_item:
             continue
         if item["name"].lower() == new_lower:
@@ -196,7 +196,7 @@ def add_item(category, item_name):
     if is_duplicate(item_name):
         st.error(f"“{item_name}” is already on the list.")
         return
-    st.session_state.items.append(
+    st.session_state.potluck_items.append(
         {"name": item_name, "category": category, "claimed_by": None}
     )
     # Clear input field
@@ -218,7 +218,7 @@ def unclaim_item(item, claimer):
 st.markdown("<h1 style='font-weight: 300;'>🥂 Galentine's Potluck</h1>", unsafe_allow_html=True)
 st.markdown("<p style='color: #9F2B68; margin-top: -0.5rem;'>who’s bringing what</p>", unsafe_allow_html=True)
 
-# Create the text input widget - DO NOT manually assign to st.session_state.name after this
+# Create the text input widget
 st.text_input(
     "Your name",
     key="name",
@@ -226,7 +226,7 @@ st.text_input(
     help="Please enter your name to start adding or claiming items",
 )
 
-# Get the current name value (trimmed) for logic, but don't reassign to session_state
+# Get the current name value (trimmed) for logic
 current_name = st.session_state.name.strip() if st.session_state.name else ""
 
 if not current_name:
@@ -265,7 +265,7 @@ for category in categories:
                         # Claim button
                         st.button(
                             "Claim",
-                            key=f"claim_{category}_{item['name']}",
+                            key=f"claim_{category}_{item['name']}_{id(item)}",
                             on_click=claim_item,
                             args=(item, st.session_state.name),
                             disabled=not current_name,
@@ -274,7 +274,7 @@ for category in categories:
                         # Unclaim button (only for current user)
                         st.button(
                             "Unclaim",
-                            key=f"unclaim_{category}_{item['name']}",
+                            key=f"unclaim_{category}_{item['name']}_{id(item)}",
                             on_click=unclaim_item,
                             args=(item, st.session_state.name),
                             disabled=not current_name,
@@ -309,8 +309,8 @@ for category in categories:
 # Export to Excel
 # ------------------------------
 st.markdown("<hr />", unsafe_allow_html=True)
-if st.session_state.items:
-    df = pd.DataFrame(st.session_state.items)
+if st.session_state.potluck_items:
+    df = pd.DataFrame(st.session_state.potluck_items)
     df["Status"] = df["claimed_by"].apply(lambda x: "Claimed" if x else "Available")
     df = df.rename(columns={"name": "Item Name", "category": "Category", "claimed_by": "Claimed By"})
     df = df[["Item Name", "Category", "Claimed By", "Status"]]
