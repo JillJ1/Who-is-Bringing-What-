@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ------------------------------
-# Custom CSS - FIXED LAYOUT + LOADING SCREEN
+# Custom CSS - Clean layout
 # ------------------------------
 st.markdown(
     """
@@ -251,96 +251,11 @@ st.markdown(
         border-top: 1px solid #F0D1DC;
     }
     
-    /* Loading screen */
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #FAF3F5;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        opacity: 1;
-        transition: opacity 0.5s ease;
-        cursor: pointer;
-    }
-    
-    .loading-content {
-        text-align: center;
-        animation: subtlePulse 2s ease-in-out infinite;
-        pointer-events: none;
-    }
-    
-    .loading-icon {
-        font-size: 3.5rem;
-        color: #4A0E1F;
-        opacity: 0.9;
-    }
-    
-    .loading-text {
-        color: #9F2B68;
-        font-size: 1.3rem;
-        margin-top: 1rem;
-        font-weight: 300;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-    }
-    
-    .loading-overlay.fade-out {
-        opacity: 0;
-    }
-    
-    @keyframes subtlePulse {
-        0% { transform: scale(1); opacity: 0.7; }
-        50% { transform: scale(1.02); opacity: 1; }
-        100% { transform: scale(1); opacity: 0.7; }
-    }
-    
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     </style>
-    
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="loading-icon">🥂</div>
-            <div class="loading-text">Galentine's</div>
-        </div>
-    </div>
-    
-    <script>
-        // Function to remove loading overlay
-        function removeLoadingOverlay() {
-            var overlay = document.getElementById('loading-overlay');
-            if (overlay && !overlay.classList.contains('fade-out')) {
-                overlay.classList.add('fade-out');
-                setTimeout(function() {
-                    if (overlay && overlay.parentNode) {
-                        overlay.parentNode.removeChild(overlay);
-                    }
-                }, 500);
-            }
-        }
-        
-        // Remove on any key press
-        document.addEventListener('keydown', function() {
-            removeLoadingOverlay();
-        });
-        
-        // Remove on any click
-        document.addEventListener('click', function() {
-            removeLoadingOverlay();
-        });
-        
-        // Also remove after 3 seconds as fallback
-        setTimeout(function() {
-            removeLoadingOverlay();
-        }, 3000);
-    </script>
     """,
     unsafe_allow_html=True,
 )
