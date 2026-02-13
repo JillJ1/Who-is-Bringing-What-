@@ -218,6 +218,7 @@ def unclaim_item(item, claimer):
 st.markdown("<h1 style='font-weight: 300;'>🥂 Galentine's Potluck</h1>", unsafe_allow_html=True)
 st.markdown("<p style='color: #9F2B68; margin-top: -0.5rem;'>who’s bringing what</p>", unsafe_allow_html=True)
 
+# Create the text input widget - DO NOT manually assign to st.session_state.name after this
 st.text_input(
     "Your name",
     key="name",
@@ -225,6 +226,7 @@ st.text_input(
     help="Please enter your name to start adding or claiming items",
 )
 
+# Get the current name value (trimmed) for logic, but don't reassign to session_state
 current_name = st.session_state.name.strip() if st.session_state.name else ""
 
 if not current_name:
@@ -268,7 +270,7 @@ for category in categories:
                             args=(item, st.session_state.name),
                             disabled=not current_name,
                         )
-                    elif item["claimed_by"] == st.session_state.name.strip():
+                    elif item["claimed_by"] == current_name:
                         # Unclaim button (only for current user)
                         st.button(
                             "Unclaim",
