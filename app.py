@@ -264,32 +264,39 @@ st.markdown(
         align-items: center;
         z-index: 9999;
         opacity: 1;
-        transition: opacity 1s ease;
-        pointer-events: none;
+        transition: opacity 0.5s ease;
+        cursor: pointer;
     }
     
     .loading-content {
         text-align: center;
-        animation: subtleFade 1.5s ease-in-out;
+        animation: subtlePulse 2s ease-in-out infinite;
+        pointer-events: none;
     }
     
     .loading-icon {
-        font-size: 3rem;
+        font-size: 3.5rem;
         color: #4A0E1F;
-        opacity: 0.8;
+        opacity: 0.9;
     }
     
     .loading-text {
         color: #9F2B68;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         margin-top: 1rem;
         font-weight: 300;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         text-transform: uppercase;
     }
     
     .loading-overlay.fade-out {
         opacity: 0;
+    }
+    
+    @keyframes subtlePulse {
+        0% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.02); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.7; }
     }
     
     /* Hide Streamlit branding */
@@ -306,18 +313,33 @@ st.markdown(
     </div>
     
     <script>
-        // Fade out and remove loading overlay after 1.5 seconds
-        setTimeout(function() {
+        // Function to remove loading overlay
+        function removeLoadingOverlay() {
             var overlay = document.getElementById('loading-overlay');
-            if (overlay) {
+            if (overlay && !overlay.classList.contains('fade-out')) {
                 overlay.classList.add('fade-out');
                 setTimeout(function() {
                     if (overlay && overlay.parentNode) {
                         overlay.parentNode.removeChild(overlay);
                     }
-                }, 1000); // Remove after fade completes
+                }, 500);
             }
-        }, 1500);
+        }
+        
+        // Remove on any key press
+        document.addEventListener('keydown', function() {
+            removeLoadingOverlay();
+        });
+        
+        // Remove on any click
+        document.addEventListener('click', function() {
+            removeLoadingOverlay();
+        });
+        
+        // Also remove after 3 seconds as fallback
+        setTimeout(function() {
+            removeLoadingOverlay();
+        }, 3000);
     </script>
     """,
     unsafe_allow_html=True,
