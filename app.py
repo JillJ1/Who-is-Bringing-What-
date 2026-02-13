@@ -58,10 +58,32 @@ st.markdown(
         color: #9F2B68;
         text-align: center;
         margin-top: -0.5rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         text-transform: uppercase;
         border-bottom: 1px solid rgba(159, 43, 104, 0.2);
         padding-bottom: 1.5rem;
+    }
+    
+    /* Instructions styling */
+    .instructions {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 50px;
+        padding: 0.8rem 2rem;
+        margin: 0 auto 2rem auto;
+        max-width: 700px;
+        text-align: center;
+        border: 1px solid rgba(159, 43, 104, 0.2);
+        backdrop-filter: blur(5px);
+        color: #4A0E1F;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 12px rgba(74, 14, 31, 0.03);
+    }
+    
+    .instructions span {
+        color: #9F2B68;
+        font-weight: 400;
+        margin: 0 5px;
     }
     
     /* Name input styling */
@@ -251,6 +273,12 @@ st.markdown(
         border-top: 1px solid #F0D1DC;
     }
     
+    /* Success/Error messages styling */
+    .stAlert {
+        border-radius: 50px;
+        font-family: 'Cormorant Garamond', serif;
+    }
+    
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -274,6 +302,21 @@ if "name" not in st.session_state:
 # ------------------------------
 st.markdown('<h1 class="main-title">Galentine\'s Potluck</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Who\'s Bringing What</p>', unsafe_allow_html=True)
+
+# ------------------------------
+# Instructions
+# ------------------------------
+st.markdown(
+    """
+    <div class="instructions">
+        ✨ <span>Enter your name</span> to begin · 
+        <span>Add items</span> to any category · 
+        <span>Claim</span> what you're bringing · 
+        <span>✕</span> to delete your items
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # ------------------------------
 # Name input
@@ -300,7 +343,7 @@ def get_items_for_category(category):
     return [item for item in st.session_state.potluck_items if item["category"] == category]
 
 def is_duplicate(new_name, exclude_item=None):
-    new_lower = new_name.lower()
+    new_lower = new_name.lower().strip()
     for item in st.session_state.potluck_items:
         if exclude_item and item == exclude_item:
             continue
@@ -308,20 +351,32 @@ def is_duplicate(new_name, exclude_item=None):
             return True
     return False
 
-def add_item(category, item_name):
+def add_item(category):
+    # Get the current value from the session state key
+    item_name = st.session_state.get(f"new_item_{category}", "")
+    
     if not item_name or not item_name.strip():
-        st.error("Please enter an item name.")
+        st.error("Please enter an item name.", icon="🥂")
         return
+    
+    item_name = item_name.strip()
+    
     if is_duplicate(item_name):
-        st.error(f"“{item_name}” is already on the list.")
+        st.error(f"“{item_name}” is already on the list.", icon="🥂")
         return
+    
     st.session_state.potluck_items.append({
-        "name": item_name.strip(), 
+        "name": item_name, 
         "category": category, 
         "claimed_by": None,
         "added_by": current_name
     })
+    
+    # Clear the input field
     st.session_state[f"new_item_{category}"] = ""
+    
+    # Show success message briefly
+    st.success(f"Added “{item_name}” to {category}", icon="✨")
 
 def claim_item(item, claimer):
     claimer = claimer.strip() if claimer else None
@@ -401,6 +456,7 @@ for category in categories:
         # Add new item
         st.markdown("<hr />", unsafe_allow_html=True)
         col_input, col_button = st.columns([4, 1])
+        
         with col_input:
             st.text_input(
                 "New item",
@@ -409,13 +465,15 @@ for category in categories:
                 label_visibility="collapsed",
                 disabled=not current_name,
             )
+        
         with col_button:
             st.button(
                 "Add",
                 key=f"add_btn_{category}",
                 on_click=add_item,
-                args=(category, st.session_state[f"new_item_{category}"]),
+                args=(category,),  # Pass only category, function will get value from session state
                 disabled=not current_name,
+                type="secondary",
             )
 
         st.markdown('</div>', unsafe_allow_html=True)
