@@ -203,10 +203,12 @@ def add_item(category, item_name):
     st.session_state[f"new_item_{category}"] = ""
 
 def claim_item(item, claimer):
+    claimer = claimer.strip() if claimer else None
     if claimer and item["claimed_by"] is None:
         item["claimed_by"] = claimer
 
 def unclaim_item(item, claimer):
+    claimer = claimer.strip() if claimer else None
     if claimer and item["claimed_by"] == claimer:
         item["claimed_by"] = None
 
@@ -216,15 +218,16 @@ def unclaim_item(item, claimer):
 st.markdown("<h1 style='font-weight: 300;'>🥂 Galentine's Potluck</h1>", unsafe_allow_html=True)
 st.markdown("<p style='color: #9F2B68; margin-top: -0.5rem;'>who’s bringing what</p>", unsafe_allow_html=True)
 
-name = st.text_input(
+st.text_input(
     "Your name",
     key="name",
     placeholder="Enter your name to continue",
     help="Please enter your name to start adding or claiming items",
 )
-st.session_state.name = name.strip() if name else ""
 
-if not st.session_state.name:
+current_name = st.session_state.name.strip() if st.session_state.name else ""
+
+if not current_name:
     st.markdown('<p class="hint-message">✨ Please enter your name to continue ✨</p>', unsafe_allow_html=True)
 
 # ------------------------------
@@ -263,16 +266,16 @@ for category in categories:
                             key=f"claim_{category}_{item['name']}",
                             on_click=claim_item,
                             args=(item, st.session_state.name),
-                            disabled=not st.session_state.name,
+                            disabled=not current_name,
                         )
-                    elif item["claimed_by"] == st.session_state.name:
+                    elif item["claimed_by"] == st.session_state.name.strip():
                         # Unclaim button (only for current user)
                         st.button(
                             "Unclaim",
                             key=f"unclaim_{category}_{item['name']}",
                             on_click=unclaim_item,
                             args=(item, st.session_state.name),
-                            disabled=not st.session_state.name,
+                            disabled=not current_name,
                         )
                     else:
                         # Claimed by someone else – no button
@@ -287,7 +290,7 @@ for category in categories:
                 key=f"new_item_{category}",
                 placeholder="e.g., Chocolate strawberries",
                 label_visibility="collapsed",
-                disabled=not st.session_state.name,
+                disabled=not current_name,
             )
         with col_button:
             st.button(
@@ -295,7 +298,7 @@ for category in categories:
                 key=f"add_btn_{category}",
                 on_click=add_item,
                 args=(category, st.session_state[f"new_item_{category}"]),
-                disabled=not st.session_state.name,
+                disabled=not current_name,
             )
 
         st.markdown('</div>', unsafe_allow_html=True)  # close category-card
