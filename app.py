@@ -14,22 +14,31 @@ st.set_page_config(
 )
 
 # ------------------------------
-# Custom CSS for luxury aesthetic
+# Custom CSS - FIXED LAYOUT + LOADING SCREEN
 # ------------------------------
 st.markdown(
     """
     <style>
-    /* Overall background and typography */
+    /* Import elegant font */
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap');
+    
+    /* Reset Streamlit's default white container */
     .stApp {
         background-color: #FAF3F5;
         font-family: 'Cormorant Garamond', 'Times New Roman', serif;
     }
     
-    /* Import elegant font */
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap');
+    /* Fix the white background container */
+    .block-container {
+        background-color: transparent !important;
+        border-radius: 0 !important;
+        padding: 2rem 3rem !important;
+        max-width: 900px;
+    }
     
-    h1, h2, h3, .stMarkdown {
-        font-family: 'Cormorant Garamond', serif;
+    /* Ensure no unwanted backgrounds */
+    .main > div {
+        background-color: transparent;
     }
     
     /* Main title */
@@ -127,13 +136,6 @@ st.markdown(
         font-style: italic;
     }
     
-    /* Button container for actions */
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-    }
-    
     /* Buttons */
     .stButton button {
         border-radius: 30px;
@@ -163,7 +165,7 @@ st.markdown(
         box-shadow: none;
     }
     
-    /* Delete button special styling */
+    /* Delete button */
     .delete-button button {
         color: #9F2B68;
         border-color: #F8E8ED;
@@ -232,7 +234,7 @@ st.markdown(
         font-size: 1.1rem;
     }
     
-    /* Empty state message */
+    /* Empty state */
     .empty-message {
         color: #9F2B68;
         opacity: 0.5;
@@ -249,8 +251,8 @@ st.markdown(
         border-top: 1px solid #F0D1DC;
     }
     
-    /* Loading animation */
-    .loading-container {
+    /* Loading screen */
+    .loading-overlay {
         position: fixed;
         top: 0;
         left: 0;
@@ -261,54 +263,62 @@ st.markdown(
         justify-content: center;
         align-items: center;
         z-index: 9999;
+        opacity: 1;
         transition: opacity 1s ease;
         pointer-events: none;
     }
     
     .loading-content {
         text-align: center;
+        animation: subtleFade 1.5s ease-in-out;
     }
     
     .loading-icon {
-        font-size: 3.5rem;
+        font-size: 3rem;
         color: #4A0E1F;
-        animation: subtlePulse 2s ease-in-out infinite;
+        opacity: 0.8;
     }
     
     .loading-text {
         color: #9F2B68;
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         margin-top: 1rem;
         font-weight: 300;
-        letter-spacing: 3px;
+        letter-spacing: 2px;
         text-transform: uppercase;
     }
     
-    @keyframes subtlePulse {
-        0% { opacity: 0.6; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.02); }
-        100% { opacity: 0.6; transform: scale(1); }
-    }
-    
-    .fade-out {
+    .loading-overlay.fade-out {
         opacity: 0;
     }
     
-    /* Remove extra Streamlit branding */
+    /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    
-    /* Adjust main container */
-    .main > div {
-        padding: 2rem 1rem;
-    }
-    
-    /* Column spacing for action buttons */
-    .stColumn {
-        padding: 0 2px;
-    }
     </style>
+    
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-icon">🥂</div>
+            <div class="loading-text">Galentine's</div>
+        </div>
+    </div>
+    
+    <script>
+        // Fade out and remove loading overlay after 1.5 seconds
+        setTimeout(function() {
+            var overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.add('fade-out');
+                setTimeout(function() {
+                    if (overlay && overlay.parentNode) {
+                        overlay.parentNode.removeChild(overlay);
+                    }
+                }, 1000); // Remove after fade completes
+            }
+        }, 1500);
+    </script>
     """,
     unsafe_allow_html=True,
 )
@@ -323,49 +333,13 @@ if "name" not in st.session_state:
     st.session_state.name = ""
 
 # ------------------------------
-# Loading animation
-# ------------------------------
-if "loading_complete" not in st.session_state:
-    st.session_state.loading_complete = False
-    
-    loading_placeholder = st.empty()
-    
-    with loading_placeholder.container():
-        st.markdown(
-            """
-            <div class="loading-container" id="loading-container">
-                <div class="loading-content">
-                    <div class="loading-icon">🥂</div>
-                    <div class="loading-text">Galentine's</div>
-                </div>
-            </div>
-            <script>
-                setTimeout(function() {
-                    var container = document.getElementById('loading-container');
-                    if (container) {
-                        container.classList.add('fade-out');
-                        setTimeout(function() {
-                            container.style.display = 'none';
-                        }, 1000);
-                    }
-                }, 1500);
-            </script>
-            """,
-            unsafe_allow_html=True
-        )
-    
-    time.sleep(0.5)
-    st.session_state.loading_complete = True
-    loading_placeholder.empty()
-
-# ------------------------------
 # Header
 # ------------------------------
 st.markdown('<h1 class="main-title">Galentine\'s Potluck</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Who\'s Bringing What</p>', unsafe_allow_html=True)
 
 # ------------------------------
-# Name input (centered)
+# Name input
 # ------------------------------
 st.markdown('<div class="name-section">', unsafe_allow_html=True)
 st.markdown('<p class="name-label">Your Name</p>', unsafe_allow_html=True)
@@ -408,7 +382,7 @@ def add_item(category, item_name):
         "name": item_name.strip(), 
         "category": category, 
         "claimed_by": None,
-        "added_by": current_name  # Track who added the item
+        "added_by": current_name
     })
     st.session_state[f"new_item_{category}"] = ""
 
@@ -447,18 +421,15 @@ for category in categories:
             for item in items_in_cat:
                 cols = st.columns([3, 2, 2])
                 
-                # Item name
                 with cols[0]:
                     st.markdown(f'<span class="item-name">{item["name"]}</span>', unsafe_allow_html=True)
                 
-                # Claimed by / Available
                 with cols[1]:
                     if item["claimed_by"]:
                         st.markdown(f'<span class="claimed-by">{item["claimed_by"]}</span>', unsafe_allow_html=True)
                     else:
                         st.markdown('<span class="available">Available</span>', unsafe_allow_html=True)
                 
-                # Action buttons
                 with cols[2]:
                     button_cols = st.columns([1, 1])
                     
@@ -481,7 +452,6 @@ for category in categories:
                             )
                     
                     with button_cols[1]:
-                        # Delete button - only visible to person who added the item
                         if current_name and item.get("added_by") == current_name:
                             st.button(
                                 "✕",
@@ -536,7 +506,6 @@ if st.session_state.potluck_items:
         workbook = writer.book
         worksheet = writer.sheets["Potluck"]
         
-        # Add some formatting to Excel
         header_format = workbook.add_format({
             'bold': False,
             'font_color': '#4A0E1F',
