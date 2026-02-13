@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+import time
 
 # ------------------------------
 # Page configuration
@@ -27,7 +28,7 @@ st.markdown(
         letter-spacing: 0.5px;
         color: #800020;
     }
-    /* Soft card containers */
+    /* Soft card containers - no decorative borders */
     .category-card {
         background-color: white;
         border-radius: 20px;
@@ -35,37 +36,10 @@ st.markdown(
         margin-bottom: 2rem;
         box-shadow: 0 8px 20px rgba(128, 0, 32, 0.05);
         border: 1px solid rgba(128, 0, 32, 0.1);
-        position: relative;
         transition: box-shadow 0.2s ease;
     }
     .category-card:hover {
         box-shadow: 0 12px 28px rgba(128, 0, 32, 0.08);
-    }
-    /* Faint architectural border accent (top-left corner) */
-    .category-card::before {
-        content: '';
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        width: 50px;
-        height: 50px;
-        border-top: 1px solid rgba(128, 0, 32, 0.15);
-        border-left: 1px solid rgba(128, 0, 32, 0.15);
-        border-radius: 8px 0 0 0;
-        pointer-events: none;
-    }
-    /* Secondary accent (bottom-right) */
-    .category-card::after {
-        content: '';
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-        width: 50px;
-        height: 50px;
-        border-bottom: 1px solid rgba(128, 0, 32, 0.15);
-        border-right: 1px solid rgba(128, 0, 32, 0.15);
-        border-radius: 0 0 8px 0;
-        pointer-events: none;
     }
     /* Category title */
     .category-title {
@@ -152,27 +126,95 @@ st.markdown(
         border: none;
         border-top: 1px solid #F8C8DC;
     }
+    /* Loading animation */
+    .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #FFF0F5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 1s ease;
+        pointer-events: none;
+    }
+    .loading-content {
+        text-align: center;
+    }
+    .loading-heart {
+        font-size: 3rem;
+        color: #800020;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    .loading-text {
+        color: #9F2B68;
+        font-size: 1.2rem;
+        margin-top: 1rem;
+        font-style: italic;
+        letter-spacing: 1px;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.7; }
+    }
+    .fade-out {
+        opacity: 0;
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 # ------------------------------
-# Initialize session state with a unique key
+# Initialize session state with empty lists
 # ------------------------------
 if "potluck_items" not in st.session_state:
-    # Start with a few optional examples (can be removed)
-    st.session_state.potluck_items = [
-        {"name": "Truffle Popcorn", "category": "Snacks", "claimed_by": None},
-        {"name": "Mini Quiches", "category": "Snacks", "claimed_by": None},
-        {"name": "Vegan Chili", "category": "Main Dishes", "claimed_by": None},
-        {"name": "Sparkling Rosé", "category": "Beverages", "claimed_by": None},
-        {"name": "Earl Grey Tea", "category": "Beverages", "claimed_by": None},
-        {"name": "Gin & Tonic Kit", "category": "Alcohol", "claimed_by": None},
-        {"name": "Chocolate Mousse", "category": "Desserts", "claimed_by": None},
-    ]
+    st.session_state.potluck_items = []  # Start with empty list - no pre-populated items
+    
 if "name" not in st.session_state:
     st.session_state.name = ""
+
+# ------------------------------
+# Loading animation (appears once on first load)
+# ------------------------------
+if "loading_complete" not in st.session_state:
+    st.session_state.loading_complete = False
+    
+    # Create loading placeholder
+    loading_placeholder = st.empty()
+    
+    with loading_placeholder.container():
+        st.markdown(
+            """
+            <div class="loading-container" id="loading-container">
+                <div class="loading-content">
+                    <div class="loading-heart">🥂</div>
+                    <div class="loading-text">gathering the galentines...</div>
+                </div>
+            </div>
+            <script>
+                setTimeout(function() {
+                    var container = document.getElementById('loading-container');
+                    if (container) {
+                        container.classList.add('fade-out');
+                        setTimeout(function() {
+                            container.style.display = 'none';
+                        }, 1000);
+                    }
+                }, 1500);
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
+    
+    # Small delay to show animation
+    time.sleep(0.5)
+    st.session_state.loading_complete = True
+    loading_placeholder.empty()
 
 # ------------------------------
 # Helper functions
@@ -191,13 +233,14 @@ def is_duplicate(new_name, exclude_item=None):
     return False
 
 def add_item(category, item_name):
-    if not item_name:
+    if not item_name or not item_name.strip():
+        st.error("Please enter an item name.")
         return
     if is_duplicate(item_name):
         st.error(f"“{item_name}” is already on the list.")
         return
     st.session_state.potluck_items.append(
-        {"name": item_name, "category": category, "claimed_by": None}
+        {"name": item_name.strip(), "category": category, "claimed_by": None}
     )
     # Clear input field
     st.session_state[f"new_item_{category}"] = ""
@@ -249,7 +292,7 @@ for category in categories:
         items_in_cat = get_items_for_category(category)
 
         if not items_in_cat:
-            st.markdown("<p style='color: #800020; opacity: 0.5; font-style: italic; margin-bottom: 1rem;'>No items yet.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #800020; opacity: 0.5; font-style: italic; margin-bottom: 1rem;'>No items yet. Add something below ✨</p>", unsafe_allow_html=True)
         else:
             for item in items_in_cat:
                 cols = st.columns([3, 2, 1])
@@ -308,8 +351,8 @@ for category in categories:
 # ------------------------------
 # Export to Excel
 # ------------------------------
-st.markdown("<hr />", unsafe_allow_html=True)
-if st.session_state.potluck_items:
+if st.session_state.potluck_items:  # Only show export if there are items
+    st.markdown("<hr />", unsafe_allow_html=True)
     df = pd.DataFrame(st.session_state.potluck_items)
     df["Status"] = df["claimed_by"].apply(lambda x: "Claimed" if x else "Available")
     df = df.rename(columns={"name": "Item Name", "category": "Category", "claimed_by": "Claimed By"})
@@ -328,5 +371,3 @@ if st.session_state.potluck_items:
         key="export",
         help="Download the current list as an Excel file",
     )
-else:
-    st.info("Add some items first – then you can export the list.")
